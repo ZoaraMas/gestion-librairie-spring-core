@@ -120,10 +120,8 @@ public class UserController {
         User target = this.userService.login(user, password);
         if (target != null) {
             session.setAttribute("auth", target.getId());
-            System.out.println("cheese null");
             return "redirect:../";
         }
-        System.out.println("cheese not null");
         model.addAttribute("error", "Mail or Password wrong or don't match");
         return "redirect:form-login?error=login_failed";
     }

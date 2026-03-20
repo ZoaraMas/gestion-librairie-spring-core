@@ -1,297 +1,226 @@
-# 06-05-2025
-- Jusqu'a maintenant, on a initialise le projet spring, et mis en place notre premier bean en prenant en compte la difference entre les bean de scope prototype et singleton
-
-- Ensuite on a commencer a injecter les dependances dans les beans, pour ne pas a devoir recompiler le programme si il y a certaines modifications puisque les informations(du utildb par exemple) ne sont plus ecrit en dur dans le code.
-    Aussi getConnection de utilDb ne sera plus en statique et chaque entite aura aussi un attribut utildb pour pouvoir utiliser la connection de maniere plus flexible
-
-# 10-05-2025
-- Je vais implementer l'oriente une bonne fois pour toute pour l'injection des dependences
-
-- C'est bon l'oriente objet a ete realise, et les deux methodes d'architecture sont pret a etre porte
-
-
-
-# 13-05-2025
-On oublie tout ce qui est dao et oriente service et on part sur une implementation de repository avec jpa
-
-On remplace alors les dao avec des repository et toutes les requetes y seront deja disponible sans implementation[repository en interface], a condition de mettre en place les configurations necessaires sur les entityManager dans le fichier xml de configuration
-
-Ensuite, il y a 3 types de passage de message a un framework: convention, fichier de configuration(.xml par exemple) et les annotations.
-On va alors annoter les classes d'entites par @Entity, les services par @Service, et les repository par @repository. Les services utiliseront alors les methodes des repository pour effectuer des operations + des operations logiques de metier.
-
-On peut par exemple annoter les attributs d'une entite pour faire la correspondance aux attributs dans les tables dans la base de donnee. Mais on peut aussi ne pas le faire, alors le framework agira sur l'attribut en mode convention[nom d'attribut de classe = nom d'attribut de table], l'element important est de juste annoter l'entite comme equivalent de table de la base de donnne. Il en est a peu pres ainsi aussi pour les noms des requetes dans les repository, comme findByCompteNumero par exemple qui devrait etre automatique via l'attribut CompteNumero sans implementation de compte. Il y a aussi une maniere specifique d'inclurer directement une requete sql en dure pour des soucis de performances ou de complexite
-
-# 16-05-2025
-On va implementer la couche vue et controller des choses.
-Il existe maintenant des classes qui joueur le role de controller ou on pourrait indiquer la methode utilise pour chaque path. On met en argument un model, ou on va pouvoir ajouter les attributs sur le model. on aura alors besoin d'un web.xml, application.xml 
-
-# 17-05-2025
-Implementation web de spring:
-- web.xml: on va mettre en place les listeners pour pouvoir rediriger a tout temps quand on commence l'application par exemple
-
-# 18-05-2025 
-DIEU merci enfin ca marche, il vient vraiment d'ecouter mon cri de desespoir, alors que tomcat semblait afficher encore que le projet ne marche pas, je clique et ca marche!!! Merci beaucoups tellement Seigneur je vous aime
-
-Bon c'etait vraiment ardu je me rend compte, et devenir developeur spring ca va vraiment etre complique. Alors mon probleme la etait que la version entre tomcat et spring ne marchait pas, mon spring etait encore dans un delire de javax, alors que tomcat necessite jakarta. Bien sure autres que les autres problemes techniques que j'ai rencontre, mais je pense que ca merite un peu plus de recherche les differents aspects qui vont composer le spring, mais au moins maintenant je voie une certaine logique se construire et que chaque fichier a son role a jouer dans l'histoire
-
-# 23-05-2025
-Pour compiler le projet et le deployer vers tomcat:
-- ./run.bat
-- ./CompAndMove.bat
-
-# 26-05-2025
-L'objectif d'aujourd'hui est de faire un crud entier pour departement et emp en utilisant l'architecture spring le plus utilise
-
-Voici les couches de l'architecture:
-Persistence, repository, dervice, Presentation[controller, vue, modele]
-Etapes:
-- CRUD DEPARTEMENT
-    - Persistence
-    - repository
-    - service
-    - Presentation
-        - modele
-        - vue
-        - controller
-
-
-- read et create de dept fonctionnent
-
-- Faire la meme pour emp + update et delete
-
-# 27-05-2025
-Hier et aujourd'hui j'ai ete confronte a un probleme majeur, l'erreur:
-27-May-2025 08:30:08.767 INFO [mysql-cj-abandoned-connection-cleanup] org.apache.catalina.loader.WebappClassLoaderBase.checkStateForResourceLoading Illegal access: this web application instance has been stopped already. Could not load []. The following stack trace is thrown for debugging purposes as well as to attempt to terminate the thread which caused the illegal access.
-	java.lang.IllegalStateException: Illegal access: this web application instance has been stopped already. Could not load []. The following stack trace is thrown for debugging purposes as well as to attempt to terminate the thread which caused the illegal access.
-		at org.apache.catalina.loader.WebappClassLoaderBase.checkStateForResourceLoading(WebappClassLoaderBase.java:1352)
-		at org.apache.catalina.loader.WebappClassLoaderBase.getResource(WebappClassLoaderBase.java:950)
-		at com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkThreadContextClassLoader(AbandonedConnectionCleanupThread.java:123)
-		at com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.run(AbandonedConnectionCleanupThread.java:90)
-		at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-		at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-		at java.base/java.lang.Thread.run(Thread.java:842)
-
-ca parlait d'erreur de mysql cleanup qui voulait pas bien marcher, chat me proposait des choses pas tres logiques, mais en faite le probleme etait tout simple:
-j'ai creer une fonction dans repo findByName alors que l'attribut name n'existait tout simplement pas, je doit etre plus logique surtout quand je fais des copier coller, ca m'eviterais des heures de debug
-
-
-# LA CONCEPTIONS(donnee, traitement)
-ici on va parler de donnee
-
-Quels sont les entites et les caracteritiques?
-Cardinalite: oneToMany, ManyToOne, manyToMany
-
-si c'est le cas de manyToMany, il faut creer une table associatif, -> ca veut dire que chacune des entites peuvent avoir plusieurs references de l'autre cote, en depit du temps, c'est pour ca qu'on a une sorte d'historique alors dans la table associatif
-
-sinon, l'entite qui possede le many n'a pas d'incidence dans sa conception(seul le one aura un fk)
-
-
-Pour le tp d'aujourd'hui, on va creer une table film et une table categorie, c'est du many to many
-
-- Erreur super chelou encore, cette fois ci, c'etait car j'ai ecris Embedded au lieu de EmbededId dans la classe associative, bref faut vraiment mieux comprendre le code qui atterit dans notre editeur.
-
-# 30-05-2025
-- Pour la creation de film, on a la possibilite de choisir plusieurs categories
-[
-    J'ai longtemps ete bloque pour l'implementation de la table associative, en effet, quand on creer une nouvelle instance de cette derniere, il faut aussi imperativement mettre a jour l'id embeded a l'interieur, c'est ce qui permet au jpa de sauver le tout. aussi, on ajoute le filmCategorie au payement
-]
-
-Pour obtenir les categories dans les films, il faut imperativement qu'elles soient initialise dans une fonction transaction, surtout si on a du fetch.lazy
-
-plus que la fonction update, initialiser les categories avant de mettre les checkBoxes et ensuite faire marcher l'update
-
-
-# Ainsi s'acheve les logs de preparation spring,  maintenant place au projet de bibliotech final
-
-# 01-07-25
-- Initialisation projet + base de donnee
-
-- Fonctionalite Pret Livre
-    - verifier si l'exemplaire du livre est encore disponible => il va falloir prendre en compte les prets deja existant pour verifier si un exemplaire(en tant qu'individu propre) est encore disponible ou non
-    - Je vais creer les vues necessaires pour creer la fonction sql qui va verifier si un exemplaire est disponible maintenant ou non
-
-# 04-07-25
-Mon probleme etait de comment interpreter la vue pret_parametre vers une entite
-
-- Plus tard on aura des prets qui existeront deja pour des dates > now(), on ne les comptes pas quand on va verifier la penalisation actuelle
-
-
-# 05-07-2025
-- Le pret etant regle on enchaine les foncitonalites, du plus vital au moins vital
-
-[ok]- remettre un exemplaire de livre
-[ok]- reserver un exemplaire de livre
-[ok]- valider une reservation 
-[ok]- automatiser script + securite pour les parametres
-[ok]- looping -> mysqlWorkBench
-- mise en forme liste de fonctionalites
-- frontend
-
-
-- gestion jour ferrie
-- demande de prolongation de pret
-- validation de prolongement de pret
-- dashboard
-
-
-- 1) Remettre un exemplaire de livre
-    - on doit pouvoir selectioner la date de remise du livre, cela implique de rajouter les fonctions necessaires qui prenaient jusqu'a maintenant pas d'argument de date mais qui utilisaient now()
-
-- reprise:
-les regles de gestions sont plies, implementer la fonction save
-
-maintenant je vais creer une fonction qui verifie si un pret sera couvert par une inscription, donc je vais aller creer l'entite parametre_pret
-
-# 06-07-2025
-- Alea possible:
-    - est ce que mon programme permet de detecter un exemplaire disponible s'il a ete rendu avant la date limite? est ce que je part des remise pour verifier la disponibilite d'un exemplaire?
-
-[regle]- probleme l'utilisateur 13 de l'inscription 12 sera penalise apre le 11 Juillet car il n'aura pas encore remis le livre
-
-- Debut fonctionalite validation validation-reservation
-
-
-
-# Elements a reverifier:
-- quota a un certain date lors de la reservation par exemple
-
-# 07-07-25
-Ne peut pas convertir le resultat du repo en LivreNombre DTO dans livreService
-
-# 10-07-25
-Testons la reservation ainsi que la validation de reservation:
-insert into inscription (date_inscription, id_user, id_typ  e_adherent, duree_mois, id_employe) values('2025-07-02', 1, 1, 10, 1);
-
-- la validation de reservation semble deja marcher actuellement
-
-=>PB: Ne peut pas convertir le resultat du repo en LivreNombre DTO dans livreService 
-- mamorona vue ho an'ny pret_nombre_desc dia apiasaina @ repo an'ny livre mba hireglena ny erreur.
-
-- - Comment tester le bon fonctionnement des modules?
-    - Creer un systeme(excel ou autre)
-    - Avoir des donnees logiques et coherentes et graphes 
-        - inclure des donnees de toutes les sortes.
-
-
-- Je dois d'abord rajouter la possibilite de creer un pret a une date donnee
-    - Pour l''instant ca marche sans encore les verifications metiers rigoureuses
-
-- cela etant fait:  
-    Voici les fonctionalites a tester:
-        - pret
-        - reservation qui sont finalement la meme chose
-
-- Fonctionalites a rajouter dans le dashboard:
-    - liste des personnes penalises a une telle date 
-
-# 12-07-2025
-- Probleme:
-    -  un membre reserve un livre a preter sur place le 15 Aout
-    - ensuite un membre prete le livre le 15 Aout
-    - on valide ensuite la reservation et le pret est encore insere, alors que le livre a deja ete  pris par le preteur qui n'a pas reserve
-=> le probleme c'est l'heure de la date qui est inferieur au pret deja existant alors que dans ma requete ca faite :date >= datePret
-[ok]
-
-- ISSUE 
-    - quand on prete sur place, le pret devrait se faire jusqu'a 20h le jour meme juste, je modifie alors la vue
-[ok]
-
-- J'ai fait assez de verification pour aujourd'hui, je vais maintenant appliquer un template css et mettre la validation ou refus de reservation dans la liste des reservations, et ensuite implementer le dashboard.
-
-
-
-# 14-07-25
-- ON reprend
-- Je commence par la demande de prolongement d'un pretr
-
-- Je me rend compte de ce qu'implique la date dans la remise, puisque j'obtiens le dernier pret non rendu juste, mais finalement
-c'est pas grave car deja c'est un scenrio exceptionel d'ajouter une date de remise, de plus l'important est que l'exemplaire est bien revenu sain et sauf et aussi qu'aucun pret n'aurais du etre admis si l'exemplaire en question n'a pas encore ete rendu
-
-- Attention, la mise en place de date dans les formulaires ne devraient pas etre des dates du passe, sinon cela pourrait etre source d'erreur
-
-
-- Mon probleme lors du test de prolongement c'est que l'utilisateur de l'inscription id: 2 est penalise alors qu'il a deja rendu tout les livres a part le livre qu'il veut prolonger.
-
-- Dans mon dernier screen, je ne peux plus creer un pret pour l'utilisateur 1 alors qu'il a deja rendu tout les livres et que j'attend la date propose par la mise en erreur, verifier ce fait, j'ai fait un screen pour l'erreur
-
-- Je viens de creer le controller pour demander une prolongation, ajouter dans le jsp et tester le tout, ensuite lister les prolongations pour les valider
-
-
-# 15-07-25
-- On devrait savoir si un pret est une prolongation ou non 
-- maintenant que j'ai ajouter une colonne prolongation dans pret, si le pret est une prolongation, la date de fin dependra du  nombre de jour de prolongation, en inserant un pret, simple, le prolongement sera a null
-- Maintenant je peux creer le nouveau pret lors de la validation de prolongement et le mettre en prolongement
-
-- La question maintenant c'est de savoir si le nouveau pret directement colle a la fin dur pret prolonge creerait des bugs dans le futur, rester tres lucide. 
-
-- 2 etapes avant de creer le nouveau pret de prolongation:
-    - rendre le livre 1h avant la date fin pour eviter la penalisation
-    - creer le nouveau pret a la date fin(on contournant la verification de disponibilite de pret a la date actuelle)
-
-
-- [ok] Dans mon code, c'est encore le meme user qui fait office d'emmploy car j'ai oublie de modifier
-
-- J'arrete la validation de prolongation pour l'instant d'abord pour executer l'alea, je me suis arrete a:
-    - la remise est effectue, mais lors du pret, voici l'erreur: Vous serez encore penalise a la date voulue, membre est penalise indefiniment, veuillez rendre tout les livres d'abord
-
-
-- Debut alea 3: webService
-    - On va essayer de se passer de postman pour essayer
-    - endPoint:
-http://localhost:8089/Bibliotech/livre/getLivre-avec-exemplaires?idLivre=1
-
-
-
-
-* Pour faire les jsons, tout doit etre initialiser pour un objet et avec tout les autres objets qui le composent
-
-Alea 4
-http://localhost:8089/Bibliotech/user/info?idUser=1
 # BIBLIOTECH
-- CompAndMove ou CAM(recente) pour compiler et deplacer le projet compile vers tomcat, deux version pour le pc itu et le pc TUF
-- [a verifier] CopyJsp pour copier uniquement les jsp
-- C'est dans pom.xml qu'on setup le nom du projet 
+### Library Management System — Java Spring MVC · Hibernate JPA · MySQL
 
-- fichiers cles: pom.xml, web.xml, spring.xml(applicationContext.xml), dispatcher-servlet, CAM.bat
+> A full-stack web application for managing library operations: loans, reservations, memberships, penalties, and loan extensions — built with a clean layered architecture and strict business rule enforcement.
 
-# INITIALISATION DU PROJET
-# 1- Initialisation base de donnee
-- Executer le script sql
+---
 
-# 2- Compilation et deploiement
-- executer run.bat
-- Dans le batch file CAMTuf, Changer le nom du projet [war_name] si besoin, et preciser le vrai chemin vers webapps de tomcat-10.1.28
-- Executer le batch
+## Tech Stack
 
-# Prevoir 
-- demande de pret
-- config age
+| Layer | Technology |
+|---|---|
+| **Backend Framework** | Spring MVC 6.1.3 |
+| **ORM / Persistence** | Hibernate 6.4.4 + Spring Data JPA |
+| **Database** | MySQL 8 |
+| **Runtime** | Apache Tomcat 10.1.28 (Jakarta EE) |
+| **Build Tool** | Maven |
+| **Serialization** | Jackson 2.16 (JSON + JSR310) |
+| **Java Version** | Java 17 |
 
-# DEVELOPPEMENT
-# astuces:
-- Tout se base sur la vue de pret_parametre qui va donner tout les details vitals a connaitre pour un pret
+---
 
-- Enlever la fonctionalite de login:
-Dans le web.xml: commenter /*, et mettre un autre url lambda
-<url-pattern>/user/hello</url-pattern>
-        <!-- <url-pattern>/*</url-pattern> -->
-        Par contre les insertions ne marcheront plus
-A utiliser pour les requetes GET
+## Architecture
 
-# Les fichiers du projet:
-# LES SCRIPTS DE BASE DE DONNEE
-- script.sql: conception de base prevu(il y a des tables qui sont non present dans final.sql, mais que je vais ajouter petit a petit a final.sql)
-- data.sql: donnees fonctionnels
-- query.sql: test de script tout simplement
-    - inconnu: reverse.sql
-    
-- final: script + donnees finale, script pret a etre execute
-- cross.sql: peupler les possibilites de parametres de pret non insere encore   
-[Maintenant, j'ai mis cross.sql a la fin du fichier final.sql, ainsi il n'y a plus qu'a executer le script de final.sql]
+The project follows a strict **layered architecture**:
 
-- Remarque:
-Dans mon code, j'ai la possibilite d'annuler une reservation deja valide, mais je dois alors encore implementer toute une autre loqique pour ce cas
+```
+Presentation   →   Controller (Spring MVC) + JSP Views
+Service        →   Business logic, transaction management
+Repository     →   Spring Data JPA interfaces (no boilerplate)
+Persistence    →   JPA Entities (Hibernate), MySQL views
+```
 
-Voir l'utite du created at dans le code java
+**Configuration approach:** XML-based Spring context (`spring.xml`) combined with annotation scanning (`@Service`, `@Repository`, `@Component`), giving explicit control over infrastructure beans (DataSource, EntityManagerFactory, TransactionManager) while keeping domain code annotation-driven.
 
-Quand on va valider un prolongement, la vue de pret_parametre devrait prendre non pas le nombre de jour de pret mais le nombre de jour de prolongement
+---
+
+## Key Features
+
+### Back Office (Bibliothécaire)
+- **Loan management** — Create loans with full business rule validation (quota, penalty status, availability, membership coverage)
+- **Book return** — Process returns with a configurable return date
+- **Reservation** — Reserve a specific copy for a future date, with automatic conversion to a loan on the reservation date
+- **Reservation validation** — Approve or reject reservations; approved reservations trigger automatic loan insertion
+- **Loan extension** — Request and validate extensions; approved extensions auto-create a new loan chained to the current one
+- **Member registration** — Register members with type-based access rules (Student, Professional, Teacher, Anonymous)
+- **Dashboard** — Most borrowed books, monthly loan chart, list of currently penalized members
+
+### Front Office (Membre)
+- Browse available books and catalogue
+
+### Cross-cutting
+- **Session-based authentication** with role separation (admin / standard user) enforced by a Servlet `Filter`
+- **Business rule engine** fully driven by the `pret_parametre` database view, which centralizes all loan configuration per member type, loan type, and book genre
+
+---
+
+## Business Rule Highlights
+
+The system enforces rules that make this more than a basic CRUD app:
+
+- **Availability check**: a copy is considered unavailable until it has been physically returned (tracked via the `remise_livre` table), not just by loan date
+- **Quota management**: concurrent loan limits per member type and loan type, verified at any given date
+- **Penalty system**: overdue returns block all future loans for a configurable number of days
+- **Public holiday & weekend handling**: return deadlines shift to the nearest valid working day (configurable direction: before or after)
+- **Reservation integrity**: a reservation auto-cancels if not collected by the day after its date
+- **Extension chaining**: a validated extension creates a new loan starting exactly at the end of the current one, with an automatic early-return one hour before to avoid triggering penalty rules
+
+---
+
+## ORM & Performance Notes
+
+- **Relationship mapping**: `@OneToMany`, `@ManyToOne`, `@ManyToMany` with join table entities using `@EmbeddedId`
+- **N+1 problem mitigation**: `FetchType.LAZY` used by default; collections are explicitly initialized inside `@Transactional` service methods when needed
+- **Custom projections**: DTO-based results via JPQL and native queries for dashboard aggregations (e.g., `LivreNombreDTO` for loan counts)
+- **Database views**: complex availability and parameter queries are encapsulated in MySQL views (`pret_parametre`, `exemplaire_disponible`, `pret_nombre_desc`) and mapped as read-only entities
+
+---
+
+## Screenshots
+![Loan insertion](screenshots/loan-insertion.png)
+![Success Messages](screenshots/loan-success-message.png/.png)
+![Error Messages](screenshots/loan-error-message.png)
+![Loan List, return the book, extend the loan](screenshots/loan-list-return-loan-extension.png)
+![loan-extension-business-logic-error](screenshots/loan-extension-business-logic-error.png)
+![Book reservation](screenshots/book-reservation-insertion.png)
+![reservation-business-logic-error](screenshots/reservation-business-logic-error.png)
+![resrevation-list-and-validation.png](screenshots/resrevation-list-and-validation.png.png)
+![dashboard-and-penalty](screenshots/dashboard-and-penalty.png)
+
+---
+
+## Project Structure
+
+```
+src/
+├── main/
+│   ├── java/com/
+│   │   ├── Controller/       # Spring MVC controllers
+│   │   ├── Service/          # Business logic + @Transactional
+│   │   ├── Repository/       # Spring Data JPA interfaces
+│   │   ├── Entite/           # JPA entities + DTOs
+│   │   └── Filters/          # AuthFilter (session-based auth)
+│   ├── resources/
+│   │   └── spring.xml        # Spring application context
+│   └── webapp/
+│       ├── WEB-INF/
+│       │   ├── web.xml
+│       │   ├── dispatcher-servlet.xml
+│       │   └── views/        # JSP pages
+│       ├── css/
+│       ├── js/
+│       └── images/
+└── sql/
+    ├── final.sql             # Full schema + seed data + cross data
+    ├── data.sql              # Sample operational data
+    └── query.sql             # Standalone test queries
+```
+
+---
+
+## Running the Project
+
+### Prerequisites
+- Java 17
+- Apache Tomcat 10.1.28
+- MySQL 8
+- Maven 3.x
+
+### 1 — Database Setup
+
+```sql
+-- Run the full setup script (schema + data + parameters)
+SOURCE path/to/final.sql;
+```
+
+### 2 — Configure the Project
+
+**`src/main/resources/spring.xml`** — update the datasource:
+```xml
+<property name="url" value="jdbc:mysql://localhost:3306/bibliotech?useSSL=false&amp;serverTimezone=UTC"/>
+<property name="username" value="YOUR_USERNAME"/>
+<property name="password" value="YOUR_PASSWORD"/>
+```
+
+**`pom.xml`** — update the Tomcat deployment path:
+```xml
+<tomcat.webapps.dir>PATH_TO_YOUR_TOMCAT/webapps</tomcat.webapps.dir>
+```
+
+### 3 — Build & Deploy
+
+```bash
+mvn clean package
+```
+
+The `maven-antrun-plugin` automatically copies the generated WAR to the configured Tomcat `webapps` directory.
+
+### 4 — Start Tomcat
+
+```bash
+# Linux / macOS
+$CATALINA_HOME/bin/startup.sh
+
+# Windows
+%CATALINA_HOME%\bin\startup.bat
+```
+
+Access the app at: `http://localhost:8080/Bibliotech`
+
+> **Note:** The project targets Tomcat 10.1.x specifically (Jakarta EE namespace). It is **not** compatible with Tomcat 9.x or earlier (which use the `javax.*` namespace).
+
+---
+
+## Authentication
+
+Authentication is handled by a custom `AuthFilter` registered in `web.xml`. On every request:
+
+1. Static resources and public paths (`/user/login`, `/public/*`) bypass the filter
+2. The filter reads a `auth` session attribute containing the authenticated user's ID
+3. Users with `typeUser.id != 1` are redirected to the public-facing front office
+4. Invalid or expired sessions are invalidated and redirected to the login page
+
+---
+
+## Development Log (Selected Milestones)
+
+| Date | Milestone |
+|---|---|
+| May 2025 | Project initialization: Spring bean configuration, dependency injection, XML context setup |
+| May 2025 | Migrated from manual DAO pattern to Spring Data JPA repositories |
+| May 2025 | Implemented full Spring MVC layer: controllers, dispatcher servlet, JSP views |
+| May 2025 | Resolved Jakarta/javax namespace conflict between Spring 6 and Tomcat 10 |
+| May 2025 | Full CRUD implemented for core entities with layered architecture |
+| Jul 1 2025 | BIBLIOTECH project start: database initialization, loan availability logic via SQL views |
+| Jul 4 2025 | `pret_parametre` view mapped as entity; loan parameter resolution finalized |
+| Jul 5 2025 | Book return, reservation, and reservation validation features completed |
+| Jul 6 2025 | On-site loan same-day deadline fix (cutoff at 20:00); availability detection from return records |
+| Jul 10 2025 | `LivreNombreDTO` projection issue resolved via dedicated SQL view; reservation validation tested |
+| Jul 12 2025 | Fixed race condition: reservation validated after a same-day walk-in loan incorrectly created a duplicate loan; root cause was timestamp comparison precision |
+| Jul 14 2025 | Loan extension request feature implemented |
+| Jul 15 2025 | Extension validation: auto-return chaining, new loan insertion at exact end-of-current-loan date |
+
+---
+
+## Known Limitations & Future Work
+
+- Cancelling an already-validated reservation requires additional state machine logic (not yet implemented)
+- The `created_at` timestamp field on some entities is not yet leveraged in business logic
+- Age-based configuration (`config age`) planned but not implemented
+- Extension availability check (rule 3 in UC-6) is currently suspended: since unreturned copies cannot be re-lent, the check is redundant and has been disabled pending review
+
+---
+
+## About
+
+This project was built as a comprehensive portfolio piece to demonstrate production-level Java backend skills:
+
+- Designing and implementing a non-trivial domain model with interdependent business rules
+- Configuring a full Spring MVC + Hibernate stack from scratch (no Spring Boot)
+- Writing and optimizing SQL views for complex multi-table queries
+- Managing transactional consistency across multiple related entities
+- Structuring a maintainable layered codebase ready for team collaboration
+
+---
+
+*Available for Java freelance missions — backend, API design, Spring ecosystem.*

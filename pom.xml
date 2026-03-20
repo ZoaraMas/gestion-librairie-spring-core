@@ -17,6 +17,7 @@
         <jakarta.persistence-api.version>3.1.0</jakarta.persistence-api.version>
         <jakarta.transaction-api.version>2.0.0</jakarta.transaction-api.version>
         <jackson.version>2.16.1</jackson.version>
+        <tomcat.webapps.dir>C:\tomcat-10.1.28-windows-x64\apache-tomcat-10.1.28\webapps</tomcat.webapps.dir>
     </properties>
 
     <dependencies>
@@ -142,6 +143,29 @@
                     <mainClass>com.Main</mainClass>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo message="Copie du WAR vers : ${tomcat.webapps.dir}" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.war" 
+                                    todir="${tomcat.webapps.dir}" 
+                                    overwrite="true" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
         </plugins>
     </build>
 </project>
