@@ -743,3 +743,5 @@ INSERT INTO pret (id_inscription, id_exemplaire, id_type_pret, date_pret, id_emp
     JOIN genre g ON pp.id_genre = g.id
     ORDER BY ta.libelle, tp.libelle, g.nom;
     
+
+update inscription set duree_mois = 36;
