@@ -84,7 +84,7 @@ The system enforces rules that make this more than a basic CRUD app:
 ![loan-extension-business-logic-error](screenshots/loan-extension-business-logic-error.png)
 ![Book reservation](screenshots/book-reservation-insertion.png)
 ![reservation-business-logic-error](screenshots/reservation-business-logic-error.png)
-![resrevation-list-and-validation.png](screenshots/resrevation-list-and-validation.png.png)
+![resrevation-list-and-validation.png](screenshots/reservation-list-and-validation.png)
 ![dashboard-and-penalty](screenshots/dashboard-and-penalty.png)
 
 ---
